@@ -1,0 +1,27 @@
+{
+  "paymentLinks": [],
+  "rssFeeds": [],
+  "gamingStats": [],
+  "autoTranslate": [],
+  "freeGames": {
+    "enabled": false,
+    "channelId": ""
+  },
+  "webhookServer": {
+    "enabled": false,
+    "port": 8787,
+    "channelId": ""
+  },
+  "v4Providers": {
+    "googleCalendar": "GOOGLE_CALENDAR_BRIDGE_URL",
+    "kanban": "KANBAN_BRIDGE_URL + KANBAN_REACTION_MAP",
+    "imageGeneration": "IMAGE_GENERATION_API_URL",
+    "transcriptionAndSubtitles": "TRANSCRIPTION_API_URL",
+    "textToSpeech": "TTS_API_URL",
+    "upscaling": "UPSCALER_API_URL",
+    "backgroundRemoval": "BACKGROUND_REMOVAL_API_URL",
+    "faceSwap": "FACE_SWAP_API_URL",
+    "flightTracking": "FLIGHT_TRACKING_API_URL"
+  },
+  "notes": "Provider-backed features stay disabled until their channel IDs, endpoints, or account credentials are configured. Face swapping also requires explicit per-command consent."
+}

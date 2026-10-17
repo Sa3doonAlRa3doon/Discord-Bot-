@@ -1,0 +1,15 @@
+{
+  "currencyName": "clank-coins",
+  "dailyReward": 150,
+  "workMinimum": 30,
+  "workMaximum": 90,
+  "shop": [
+    {
+      "id": "shiny-bolt",
+      "name": "Shiny Bolt",
+      "price": 250,
+      "description": "A completely virtual bolt. Immaculate vibes.",
+      "roleId": ""
+    }
+  ]
+}

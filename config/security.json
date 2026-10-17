@@ -1,0 +1,42 @@
+{
+  "enabled": true,
+  "bannedWords": [
+    "replace-this-with-a-banned-word"
+  ],
+  "blockedDomains": [
+    "discordnitro-gift.example",
+    "steamcommunity-gift.example"
+  ],
+  "blockedPhrases": [
+    "free nitro click here",
+    "free steam gift card",
+    "verify your account immediately"
+  ],
+  "antiSpam": {
+    "windowSeconds": 10,
+    "maxMessages": 6,
+    "duplicateLimit": 3,
+    "capsPercent": 75,
+    "capsMinimumLength": 20
+  },
+  "antiRaid": {
+    "windowSeconds": 20,
+    "joinThreshold": 8,
+    "lockdownMinutes": 10
+  },
+  "strikes": {
+    "timeoutAt": 2,
+    "timeoutMinutes": 10,
+    "kickAt": 5,
+    "banAt": 0
+  },
+  "verifiedRoleId": "",
+  "selfRoles": [],
+  "interestRoles": [],
+  "levelRoleRewards": [],
+  "reactionThread": {
+    "enabled": false,
+    "emoji": "💬",
+    "threshold": 5
+  }
+}

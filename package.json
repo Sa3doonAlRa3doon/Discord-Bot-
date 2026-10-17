@@ -1,0 +1,39 @@
+{
+  "name": "fanbot-hatclanker",
+  "version": "4.0.0",
+  "description": "A swag Discord server guide and personal assistant bot.",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "register": "node src/register-commands.js",
+    "invite": "node src/invite.js",
+    "check": "node --check src/index.js && node --check src/register-commands.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "server-guide",
+    "assistant"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@discordjs/voice": "^0.19.2",
+    "@napi-rs/canvas": "^1.0.11",
+    "discord.js": "^14.27.0",
+    "dotenv": "^18.0.8",
+    "mathjs": "^15.2.0",
+    "nerdamer": "^2.0.0",
+    "play-dl": "^1.9.7",
+    "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "vitest": "^5.0.5"
+  }
+}

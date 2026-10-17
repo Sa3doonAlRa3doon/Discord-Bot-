@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.local
+data/reminders.json
+data/levels.json
+data/*.json
+!data/.gitkeep
+data/server-state.json
+npm-debug.log*
+*.zip

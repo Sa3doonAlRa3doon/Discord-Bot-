@@ -1,0 +1,60 @@
+{
+  "serverName": "YOUR SERVER",
+  "tagline": "Your personal server co-pilot — loud, useful, and built for the crew.",
+  "accentColor": "#7C3AED",
+  "swearMode": false,
+  "supportRole": "@Staff",
+  "welcome": "You made it. I’m Hatclanker, your pocket-sized server mechanic. I’ll show you where everything lives and who to ask when something breaks.",
+  "features": {
+    "leveling": true,
+    "levelUpAnnouncements": true,
+    "xpCooldownSeconds": 60
+  },
+  "channels": [
+    {
+      "name": "#start-here",
+      "purpose": "Read the essentials and unlock the rest of the server."
+    },
+    {
+      "name": "#announcements",
+      "purpose": "News, drops, events, and important updates."
+    },
+    {
+      "name": "#general",
+      "purpose": "The main hangout. Talk, share, and meet the crew."
+    },
+    {
+      "name": "#help-desk",
+      "purpose": "Questions, support, and staff help."
+    }
+  ],
+  "rules": [
+    "Don’t be a dick. Debate ideas without attacking members.",
+    "No spam, scams, malicious links, or unwanted advertising.",
+    "Keep content in the right channel and follow channel topics.",
+    "Protect private information — yours and everyone else’s.",
+    "Listen to staff and use the help channel if a decision needs review."
+  ],
+  "faqs": [
+    {
+      "question": "How do I get access to the server?",
+      "answer": "Head to #start-here, read the rules, and complete the verification or role steps shown there.",
+      "keywords": ["access", "verify", "verification", "unlock", "join", "role"]
+    },
+    {
+      "question": "Where can I ask for help?",
+      "answer": "Use #help-desk and include what you tried, what happened, and a screenshot if it helps.",
+      "keywords": ["help", "support", "problem", "issue", "broken", "staff"]
+    },
+    {
+      "question": "Where are announcements posted?",
+      "answer": "All official updates, events, and drops are posted in #announcements.",
+      "keywords": ["announcement", "news", "update", "event", "drop"]
+    },
+    {
+      "question": "Can I promote my own work?",
+      "answer": "Only in a channel that explicitly allows promotion. If you are unsure, ask @Staff first.",
+      "keywords": ["promote", "advertise", "links", "self promo", "portfolio"]
+    }
+  ]
+}
