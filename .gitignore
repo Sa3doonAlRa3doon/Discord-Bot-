@@ -8,3 +8,6 @@ data/*.json
 data/server-state.json
 npm-debug.log*
 *.zip
+credentials.json
+token.json
+client_secret_*.json

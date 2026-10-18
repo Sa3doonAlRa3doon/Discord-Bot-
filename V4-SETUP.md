@@ -23,6 +23,8 @@ These commands work locally: `/pomodoro`, `/flashcard`, `/habit`, `/math`, `/com
 
 ## Google Calendar two-way bridge
 
+This bridge remains available for a shared server calendar. For a private personal Google account on the same Pi, use the owner-only `/google` commands documented in `GOOGLE-WORKSPACE-SETUP.md` instead.
+
 Set:
 
 ```dotenv

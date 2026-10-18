@@ -2,9 +2,9 @@
 
 **Your personal Discord server co-pilot — loud style, zero confusion.**
 
-Hatclanker v4.1 is a full multi-purpose Discord bot with **79 slash commands**: moderation, security, onboarding, productivity, study rooms, AI/media adapters, live utilities, games, server automation, music, economy, and configurable integrations. Its core works without a paid AI API; optional AI chat and code review use local Ollama.
+Hatclanker v4.2 is a full multi-purpose Discord bot with **80 slash commands**: moderation, security, onboarding, productivity, study rooms, private Google Workspace tools, AI/media adapters, live utilities, games, server automation, music, economy, and configurable integrations. Its core works without a paid AI API; optional AI chat and code review use local Ollama.
 
-**Current release:** v4.1.0 · **Runtime:** Node.js 20+ · **AI:** local Ollama · **Production host:** Raspberry Pi 5 supported
+**Current release:** v4.2.0 · **Runtime:** Node.js 20+ · **AI:** local Ollama · **Production host:** Raspberry Pi 5 supported
 
 ![Hatclanker avatar](assets/hatclanker-avatar.png)
 
@@ -35,6 +35,7 @@ Hatclanker v4.1 is a full multi-purpose Discord bot with **79 slash commands**: 
 - Plays supported voice media with queue, pause, skip, loop, and shuffle controls
 - Generates memes and exports poll analytics as PNG and CSV
 - Connects local Ollama with short per-user conversations, status checks, clean output, Pi-friendly limits, LibreTranslate, RSS feeds, gaming APIs, and authenticated webhooks
+- Connects one private Google account for owner-only Gmail, Calendar, Drive, Docs, Sheets, Tasks, and Contacts commands; Gmail sending requires a draft plus explicit confirmation
 - Runs shared Pomodoros, flashcard decks, habit streaks, math/calculus, dictionary, Wikipedia, and daily writing prompts
 - Adds consent-safe AI image, transcription, TTS, upscaling, background removal, face-swap, code-review, subtitle, and story adapters
 - Adds counting, a shared virtual pet, tarot/horoscope fun, starboard, character guessing, weather, facts, filtered purge, channel cloning, audit export, opt-in broadcasts, emoji cloning, and self-destructing messages
@@ -94,6 +95,8 @@ Fill in:
 - `GOODBYE_CHANNEL_ID`, `BIRTHDAY_CHANNEL_ID`, `CONFESSION_CHANNEL_ID`
 - `MEMBER_COUNT_CHANNEL_ID`: channel Hatclanker renames with the live count
 - `OLLAMA_BASE_URL` and `OLLAMA_MODEL`: optional local AI; Pi 5 defaults are documented in `PI5-OLLAMA-SETUP.md`
+- `GOOGLE_ALLOWED_USER_IDS`: comma-separated Discord user IDs allowed to access the private Google account; blank denies everyone
+- `GOOGLE_TOKEN_PATH`: protected OAuth token path, normally `/home/pi5/jarvis-google/token.json`
 - `TRANSLATE_API_URL`: optional LibreTranslate-compatible provider
 
 Never share or commit `.env`.
@@ -146,6 +149,8 @@ A healthy deployment prints `Hatclanker online as <bot tag>`. Test it from a Dis
 /game scramble
 /game slots
 ```
+
+For the private Google tools, keep `token.json` outside the repository, set `GOOGLE_ALLOWED_USER_IDS`, then use `/google status`. See [GOOGLE-WORKSPACE-SETUP.md](GOOGLE-WORKSPACE-SETUP.md). All `/google` replies are private. Drive uses the limited `drive.file` scope, and email sending is a two-step draft/confirmation flow.
 
 Ollama stays on `127.0.0.1:11434`; no router port, public IP, browser dashboard, or cloud AI key is required. See [PI5-OLLAMA-SETUP.md](PI5-OLLAMA-SETUP.md) for troubleshooting and the complete guide.
 
