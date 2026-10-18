@@ -4,6 +4,8 @@
 
 Hatclanker v4.1 is a full multi-purpose Discord bot with **79 slash commands**: moderation, security, onboarding, productivity, study rooms, AI/media adapters, live utilities, games, server automation, music, economy, and configurable integrations. Its core works without a paid AI API; optional AI chat and code review use local Ollama.
 
+**Current release:** v4.1.0 · **Runtime:** Node.js 20+ · **AI:** local Ollama · **Production host:** Raspberry Pi 5 supported
+
 ![Hatclanker avatar](assets/hatclanker-avatar.png)
 
 ## What it can do
@@ -97,6 +99,55 @@ Fill in:
 Never share or commit `.env`.
 
 If `DISCORD_GUILD_ID` is blank, commands are registered globally and Discord may take a while to distribute them. During development, using your test server ID is faster.
+
+## Raspberry Pi 5 + Ollama quick start
+
+These commands update an existing Pi checkout, install the local AI server, and download the lightweight model recommended for CPU-only Pi use:
+
+```bash
+cd ~/hatclanker
+git pull origin main
+npm install
+
+curl -fsSL https://ollama.com/install.sh | sh
+sudo systemctl enable --now ollama
+ollama pull llama3.2:1b
+```
+
+Keep your Discord settings in the existing private `.env` and add:
+
+```dotenv
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=llama3.2:1b
+OLLAMA_TIMEOUT_MS=120000
+OLLAMA_HISTORY_MESSAGES=8
+OLLAMA_NUM_PREDICT=320
+OLLAMA_KEEP_ALIVE=10m
+```
+
+Verify the model, update Discord’s command list, and restart the bot:
+
+```bash
+npm run ollama:check
+npm run register
+sudo systemctl restart hatclanker
+sudo systemctl status ollama hatclanker --no-pager -l
+```
+
+A healthy deployment prints `Hatclanker online as <bot tag>`. Test it from a Discord text channel with:
+
+```text
+/ai-status
+/ai prompt:Hello Hatclanker
+/ai-reset
+/game trivia
+/game rps
+/game number-start
+/game scramble
+/game slots
+```
+
+Ollama stays on `127.0.0.1:11434`; no router port, public IP, browser dashboard, or cloud AI key is required. See [PI5-OLLAMA-SETUP.md](PI5-OLLAMA-SETUP.md) for troubleshooting and the complete guide.
 
 ## 4. Make the server guide yours
 
