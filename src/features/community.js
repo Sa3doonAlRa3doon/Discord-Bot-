@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -17,6 +18,49 @@ import { parseDuration, humanizeDuration } from '../lib/duration.js';
 import { isModerator } from '../lib/moderation.js';
 
 const HANGMAN_WORDS = ['workshop', 'discord', 'clanker', 'turbine', 'server', 'mechanic', 'neon'];
+const SCRAMBLE_WORDS = ['raspberry', 'robot', 'keyboard', 'galaxy', 'circuit', 'adventure', 'volcano', 'spaceship', 'diamond', 'sandwich'];
+const RPS_MOVES = ['rock', 'paper', 'scissors'];
+const SLOT_SYMBOLS = ['⚙️', '🔩', '💎', '⭐', '🍒'];
+const TRIVIA_QUESTIONS = [
+  { question: 'Which planet is known as the Red Planet?', choices: ['Venus', 'Mars', 'Jupiter', 'Mercury'], answer: 1, fact: 'Iron minerals in Martian soil give Mars its red appearance.' },
+  { question: 'What is the largest ocean on Earth?', choices: ['Atlantic', 'Indian', 'Arctic', 'Pacific'], answer: 3, fact: 'The Pacific is larger than all of Earth’s land area combined.' },
+  { question: 'How many bits make one byte?', choices: ['4', '8', '16', '32'], answer: 1, fact: 'A standard byte contains 8 bits.' },
+  { question: 'Which gas do plants absorb during photosynthesis?', choices: ['Oxygen', 'Nitrogen', 'Carbon dioxide', 'Helium'], answer: 2, fact: 'Plants use carbon dioxide, water, and light to produce sugars.' },
+  { question: 'Who painted the Mona Lisa?', choices: ['Michelangelo', 'Leonardo da Vinci', 'Claude Monet', 'Vincent van Gogh'], answer: 1, fact: 'Leonardo da Vinci painted it during the Italian Renaissance.' },
+  { question: 'What does CPU stand for?', choices: ['Central Processing Unit', 'Computer Power Utility', 'Core Program User', 'Central Pixel Unit'], answer: 0, fact: 'The CPU executes instructions and coordinates a computer’s operations.' },
+  { question: 'Which animal is the fastest on land?', choices: ['Lion', 'Pronghorn', 'Cheetah', 'Horse'], answer: 2, fact: 'Cheetahs can briefly reach speeds above 90 km/h.' },
+  { question: 'What is the capital of Japan?', choices: ['Kyoto', 'Osaka', 'Tokyo', 'Sapporo'], answer: 2, fact: 'Tokyo is Japan’s capital and largest metropolitan area.' },
+  { question: 'Which instrument usually has 88 keys?', choices: ['Violin', 'Piano', 'Flute', 'Trumpet'], answer: 1, fact: 'A standard modern piano has 52 white and 36 black keys.' },
+  { question: 'What is H2O commonly called?', choices: ['Salt', 'Hydrogen', 'Water', 'Oxygen'], answer: 2, fact: 'Each water molecule contains two hydrogen atoms and one oxygen atom.' }
+];
+
+export function rpsOutcome(player, bot) {
+  if (player === bot) return 'draw';
+  return (player === 'rock' && bot === 'scissors')
+    || (player === 'paper' && bot === 'rock')
+    || (player === 'scissors' && bot === 'paper') ? 'win' : 'lose';
+}
+
+export function scrambleWord(word, random = Math.random) {
+  const letters = [...word];
+  for (let index = letters.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(random() * (index + 1));
+    [letters[index], letters[swap]] = [letters[swap], letters[index]];
+  }
+  const scrambled = letters.join('');
+  return scrambled === word ? `${word.slice(1)}${word[0]}` : scrambled;
+}
+
+export function drawSlots(random = Math.random) {
+  return Array.from({ length: 3 }, () => SLOT_SYMBOLS[Math.floor(random() * SLOT_SYMBOLS.length)]);
+}
+
+export function slotOutcome(symbols) {
+  const unique = new Set(symbols).size;
+  if (unique === 1) return 'jackpot';
+  if (unique === 2) return 'pair';
+  return 'miss';
+}
 
 function privatePayload(payload) {
   return { ...payload, flags: MessageFlags.Ephemeral };
@@ -42,6 +86,9 @@ export class CommunityFeatures {
     this.events = new JsonStore(path.join(projectRoot, 'data', 'events.json'), {});
     this.tournaments = new JsonStore(path.join(projectRoot, 'data', 'tournaments.json'), {});
     this.hangman = new Map();
+    this.numberGames = new Map();
+    this.scrambleGames = new Map();
+    this.triviaSessions = new Map();
     this.timer = null;
   }
 
@@ -100,7 +147,7 @@ export class CommunityFeatures {
       if (subcommand === 'add') {
         const text = interaction.options.getString('text', true);
         const items = this.quotes.get('items', []);
-        items.push({ id: crypto.randomUUID(), text, authorId: interaction.user.id, guildId: interaction.guildId, at: Date.now() });
+        items.push({ id: randomUUID(), text, authorId: interaction.user.id, guildId: interaction.guildId, at: Date.now() });
         await this.quotes.set('items', items);
         await interaction.reply(privatePayload({ content: `📌 Quote #${items.length} bolted into the archive.` }));
         return true;
@@ -240,29 +287,121 @@ export class CommunityFeatures {
         await interaction.reply(`🎮 **Hangman started**\n${maskWord(word, new Set())}\nUse \`/game guess\` — 6 wrong guesses allowed.`);
         return true;
       }
-      const game = this.hangman.get(interaction.channelId);
-      if (!game) {
-        await interaction.reply(privatePayload({ content: '🎮 No hangman game is running here.' }));
+
+      if (subcommand === 'guess') {
+        const game = this.hangman.get(interaction.channelId);
+        if (!game) {
+          await interaction.reply(privatePayload({ content: '🎮 No hangman game is running here.' }));
+          return true;
+        }
+        const guess = interaction.options.getString('letter', true).toLowerCase();
+        if (!/^[a-z]$/.test(guess)) {
+          await interaction.reply(privatePayload({ content: 'Give me exactly one letter.' }));
+          return true;
+        }
+        const repeated = game.guesses.has(guess);
+        game.guesses.add(guess);
+        if (!repeated && !game.word.includes(guess)) game.misses += 1;
+        const masked = maskWord(game.word, game.guesses);
+        const won = !masked.includes('＿');
+        const lost = game.misses >= 6;
+        if (won || lost) this.hangman.delete(interaction.channelId);
+        await interaction.reply(won
+          ? `🏆 ${interaction.user} solved it: **${game.word.toUpperCase()}**.`
+          : lost
+            ? `💀 Machine wins. The word was **${game.word.toUpperCase()}**.`
+            : `🎮 ${masked}\nMisses: **${game.misses}/6** · Guessed: ${[...game.guesses].join(', ').toUpperCase()}${repeated ? '\nThat letter was already guessed.' : ''}`
+        );
         return true;
       }
-      const guess = interaction.options.getString('letter', true).toLowerCase();
-      if (!/^[a-z]$/.test(guess)) {
-        await interaction.reply(privatePayload({ content: 'Give me exactly one letter.' }));
+
+      if (subcommand === 'rps') {
+        const player = interaction.options.getString('move', true);
+        const bot = RPS_MOVES[Math.floor(Math.random() * RPS_MOVES.length)];
+        const outcome = rpsOutcome(player, bot);
+        const verdict = outcome === 'win' ? 'You win!' : outcome === 'lose' ? 'Hatclanker wins!' : 'Draw!';
+        await interaction.reply(`✊ **Rock, paper, scissors**\nYou: **${player}** · Hatclanker: **${bot}**\n**${verdict}**`);
         return true;
       }
-      game.guesses.add(guess);
-      if (!game.word.includes(guess)) game.misses += 1;
-      const masked = maskWord(game.word, game.guesses);
-      const won = !masked.includes('＿');
-      const lost = game.misses >= 6;
-      if (won || lost) this.hangman.delete(interaction.channelId);
-      await interaction.reply(won
-        ? `🏆 ${interaction.user} solved it: **${game.word.toUpperCase()}**.`
-        : lost
-          ? `💀 Machine wins. The word was **${game.word.toUpperCase()}**.`
-          : `🎮 ${masked}\nMisses: **${game.misses}/6** · Guessed: ${[...game.guesses].join(', ').toUpperCase()}`
-      );
-      return true;
+
+      if (subcommand === 'trivia') {
+        const item = TRIVIA_QUESTIONS[Math.floor(Math.random() * TRIVIA_QUESTIONS.length)];
+        const token = randomUUID().replaceAll('-', '').slice(0, 12);
+        this.triviaSessions.set(token, { ...item, channelId: interaction.channelId, expiresAt: Date.now() + 120_000 });
+        const labels = ['A', 'B', 'C', 'D'];
+        const row = new ActionRowBuilder().addComponents(item.choices.map((choice, index) => new ButtonBuilder()
+          .setCustomId(`trivia:${token}:${index}`)
+          .setLabel(`${labels[index]}. ${choice}`.slice(0, 80))
+          .setStyle(ButtonStyle.Primary)));
+        const embed = new EmbedBuilder()
+          .setColor(this.config.color)
+          .setTitle('🧠 Quick trivia')
+          .setDescription(`**${item.question}**\n\n${item.choices.map((choice, index) => `${labels[index]}. ${choice}`).join('\n')}`)
+          .setFooter({ text: 'First answer wins the round · expires in 2 minutes' });
+        await interaction.reply({ embeds: [embed], components: [row] });
+        return true;
+      }
+
+      if (subcommand === 'number-start') {
+        const maximum = interaction.options.getInteger('maximum') ?? 100;
+        const secret = Math.floor(Math.random() * maximum) + 1;
+        this.numberGames.set(interaction.channelId, { secret, maximum, attempts: 0 });
+        await interaction.reply(`🔢 I picked a number from **1 to ${maximum}**. Use \`/game number-guess\` to find it.`);
+        return true;
+      }
+
+      if (subcommand === 'number-guess') {
+        const game = this.numberGames.get(interaction.channelId);
+        if (!game) {
+          await interaction.reply(privatePayload({ content: 'No number game is active here. Start one with `/game number-start`.' }));
+          return true;
+        }
+        const guess = interaction.options.getInteger('number', true);
+        if (guess > game.maximum) {
+          await interaction.reply(privatePayload({ content: `Stay inside the range **1-${game.maximum}**.` }));
+          return true;
+        }
+        game.attempts += 1;
+        if (guess === game.secret) {
+          this.numberGames.delete(interaction.channelId);
+          await interaction.reply(`🏆 ${interaction.user} found **${game.secret}** in **${game.attempts}** attempt(s)!`);
+        } else {
+          await interaction.reply(`${interaction.user} guessed **${guess}** — go **${guess < game.secret ? 'higher' : 'lower'}**. Attempt **${game.attempts}**.`);
+        }
+        return true;
+      }
+
+      if (subcommand === 'scramble') {
+        const word = SCRAMBLE_WORDS[Math.floor(Math.random() * SCRAMBLE_WORDS.length)];
+        this.scrambleGames.set(interaction.channelId, { word, attempts: 0 });
+        await interaction.reply(`🔀 Unscramble this word: **${scrambleWord(word).toUpperCase()}**\nAnswer with \`/game solve\`.`);
+        return true;
+      }
+
+      if (subcommand === 'solve') {
+        const game = this.scrambleGames.get(interaction.channelId);
+        if (!game) {
+          await interaction.reply(privatePayload({ content: 'No word scramble is active here. Start one with `/game scramble`.' }));
+          return true;
+        }
+        const answer = interaction.options.getString('word', true).trim().toLowerCase();
+        game.attempts += 1;
+        if (answer === game.word) {
+          this.scrambleGames.delete(interaction.channelId);
+          await interaction.reply(`🏆 ${interaction.user} solved **${game.word.toUpperCase()}** in **${game.attempts}** attempt(s)!`);
+        } else {
+          await interaction.reply(`${interaction.user}, that is not it. Try again.`);
+        }
+        return true;
+      }
+
+      if (subcommand === 'slots') {
+        const symbols = drawSlots();
+        const outcome = slotOutcome(symbols);
+        const result = outcome === 'jackpot' ? '**JACKPOT!**' : outcome === 'pair' ? '**Nice pair!**' : 'No match—spin again.';
+        await interaction.reply(`🎰 ┃ ${symbols.join(' ┃ ')} ┃\n${result}\n*Just for fun—no coins or real money.*`);
+        return true;
+      }
     }
 
     if (name === 'giveaway') {
@@ -273,7 +412,7 @@ export class CommunityFeatures {
         return true;
       }
       const prize = interaction.options.getString('prize', true);
-      const id = crypto.randomUUID();
+      const id = randomUUID();
       const endAt = Date.now() + duration;
       const button = new ButtonBuilder().setCustomId(`giveaway:enter:${id}`).setLabel('Enter giveaway').setEmoji('🎉').setStyle(ButtonStyle.Success);
       const embed = new EmbedBuilder().setColor(this.config.color).setTitle(`🎁 ${prize}`).setDescription(`Ends <t:${Math.floor(endAt / 1000)}:R>\nEntries: **0**`).setFooter({ text: `Hosted by ${interaction.user.username}` });
@@ -291,7 +430,7 @@ export class CommunityFeatures {
           await interaction.reply(privatePayload({ content: '📅 Use a time like `30m`, `2h`, or `3d`.' }));
           return true;
         }
-        const id = crypto.randomUUID();
+        const id = randomUUID();
         const title = interaction.options.getString('title', true);
         const details = interaction.options.getString('details') ?? 'No extra details.';
         const startsAt = Date.now() + duration;
@@ -411,6 +550,32 @@ export class CommunityFeatures {
   }
 
   async handleInteraction(interaction) {
+    if (interaction.isButton() && interaction.customId.startsWith('trivia:')) {
+      const [, token, answerText] = interaction.customId.split(':');
+      const session = this.triviaSessions.get(token);
+      if (!session || session.expiresAt <= Date.now()) {
+        this.triviaSessions.delete(token);
+        await interaction.reply(privatePayload({ content: 'That trivia round expired. Start another with `/game trivia`.' }));
+        return true;
+      }
+      if (session.channelId !== interaction.channelId) {
+        await interaction.reply(privatePayload({ content: 'That trivia button belongs to another channel.' }));
+        return true;
+      }
+      this.triviaSessions.delete(token);
+      const answer = Number.parseInt(answerText, 10);
+      const correct = answer === session.answer;
+      const embed = EmbedBuilder.from(interaction.message.embeds[0])
+        .setColor(correct ? 0x22c55e : 0xef4444)
+        .addFields({
+          name: correct ? 'Correct!' : 'Not quite',
+          value: `${interaction.user} chose **${session.choices[answer]}**. The answer is **${session.choices[session.answer]}**.\n${session.fact}`
+        })
+        .setFooter({ text: 'Round complete' });
+      await interaction.update({ embeds: [embed], components: [] });
+      return true;
+    }
+
     if (interaction.isButton() && interaction.customId.startsWith('giveaway:enter:')) {
       const id = interaction.customId.split(':')[2];
       const giveaway = this.giveaways.get(id);

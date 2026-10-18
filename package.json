@@ -1,6 +1,6 @@
 {
   "name": "fanbot-hatclanker",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "A swag Discord server guide and personal assistant bot.",
   "type": "module",
   "main": "src/index.js",
@@ -12,6 +12,7 @@
     "dev": "node --watch src/index.js",
     "register": "node src/register-commands.js",
     "invite": "node src/invite.js",
+    "ollama:check": "node src/check-ollama.js",
     "check": "node --check src/index.js && node --check src/register-commands.js",
     "test": "vitest run",
     "test:watch": "vitest"

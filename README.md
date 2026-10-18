@@ -2,7 +2,7 @@
 
 **Your personal Discord server co-pilot — loud style, zero confusion.**
 
-Hatclanker v4 is a full multi-purpose Discord bot with **77 slash commands**: moderation, security, onboarding, productivity, study rooms, AI/media adapters, live utilities, games, server automation, music, economy, and configurable integrations. Its core works without a paid AI API; optional AI chat and code review use local Ollama.
+Hatclanker v4.1 is a full multi-purpose Discord bot with **79 slash commands**: moderation, security, onboarding, productivity, study rooms, AI/media adapters, live utilities, games, server automation, music, economy, and configurable integrations. Its core works without a paid AI API; optional AI chat and code review use local Ollama.
 
 ![Hatclanker avatar](assets/hatclanker-avatar.png)
 
@@ -29,16 +29,17 @@ Hatclanker v4 is a full multi-purpose Discord bot with **77 slash commands**: mo
 - Logs message edits/deletions and kick/ban actions to a staff channel
 - Runs CAPTCHA verification, rule gates, self roles, interest onboarding, and welcome cards
 - Tracks chat and voice XP, level roles, birthdays, invites, and member counts
-- Runs giveaways, events, applications, tournaments, tickets, economy, Hangman, and character sheets
+- Runs giveaways, events, applications, tournaments, tickets, economy, Hangman, trivia, rock-paper-scissors, number guessing, word scrambles, slots, and character sheets
 - Plays supported voice media with queue, pause, skip, loop, and shuffle controls
 - Generates memes and exports poll analytics as PNG and CSV
-- Connects local Ollama, LibreTranslate, RSS feeds, gaming APIs, and authenticated webhooks
+- Connects local Ollama with short per-user conversations, status checks, clean output, Pi-friendly limits, LibreTranslate, RSS feeds, gaming APIs, and authenticated webhooks
 - Runs shared Pomodoros, flashcard decks, habit streaks, math/calculus, dictionary, Wikipedia, and daily writing prompts
 - Adds consent-safe AI image, transcription, TTS, upscaling, background removal, face-swap, code-review, subtitle, and story adapters
 - Adds counting, a shared virtual pet, tarot/horoscope fun, starboard, character guessing, weather, facts, filtered purge, channel cloning, audit export, opt-in broadcasts, emoji cloning, and self-destructing messages
 
 See [FEATURE-MATRIX.md](FEATURE-MATRIX.md) for the original feature set and [FEATURE-MATRIX-V4.md](FEATURE-MATRIX-V4.md) for items 61–100.
 Use [V4-SETUP.md](V4-SETUP.md) for the new study, AI/media, Calendar/Kanban, weather, flight, and guarded admin features.
+For local Raspberry Pi AI, follow [PI5-OLLAMA-SETUP.md](PI5-OLLAMA-SETUP.md).
 
 ## 1. Create the Discord bot
 
@@ -90,7 +91,7 @@ Fill in:
 - `VERIFIED_ROLE_ID`: role granted after rules and CAPTCHA
 - `GOODBYE_CHANNEL_ID`, `BIRTHDAY_CHANNEL_ID`, `CONFESSION_CHANNEL_ID`
 - `MEMBER_COUNT_CHANNEL_ID`: channel Hatclanker renames with the live count
-- `OLLAMA_BASE_URL` and `OLLAMA_MODEL`: optional local AI
+- `OLLAMA_BASE_URL` and `OLLAMA_MODEL`: optional local AI; Pi 5 defaults are documented in `PI5-OLLAMA-SETUP.md`
 - `TRANSLATE_API_URL`: optional LibreTranslate-compatible provider
 
 Never share or commit `.env`.

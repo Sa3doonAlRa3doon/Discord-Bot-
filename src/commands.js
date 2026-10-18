@@ -159,7 +159,22 @@ export const commandDefinitions = [
     .setDescription('Run an in-chat mini-game.')
     .addSubcommand((subcommand) => subcommand.setName('hangman').setDescription('Start Hangman in this channel.'))
     .addSubcommand((subcommand) => subcommand.setName('guess').setDescription('Guess a Hangman letter.')
-      .addStringOption((option) => option.setName('letter').setDescription('One letter').setMinLength(1).setMaxLength(1).setRequired(true))),
+      .addStringOption((option) => option.setName('letter').setDescription('One letter').setMinLength(1).setMaxLength(1).setRequired(true)))
+    .addSubcommand((subcommand) => subcommand.setName('rps').setDescription('Play rock, paper, scissors against Hatclanker.')
+      .addStringOption((option) => option.setName('move').setDescription('Your move').setRequired(true).addChoices(
+        { name: 'Rock', value: 'rock' },
+        { name: 'Paper', value: 'paper' },
+        { name: 'Scissors', value: 'scissors' }
+      )))
+    .addSubcommand((subcommand) => subcommand.setName('trivia').setDescription('Start a multiple-choice trivia round.'))
+    .addSubcommand((subcommand) => subcommand.setName('number-start').setDescription('Start a channel number-guessing game.')
+      .addIntegerOption((option) => option.setName('maximum').setDescription('Highest possible number (10-1000)').setMinValue(10).setMaxValue(1000).setRequired(false)))
+    .addSubcommand((subcommand) => subcommand.setName('number-guess').setDescription('Guess the secret channel number.')
+      .addIntegerOption((option) => option.setName('number').setDescription('Your guess').setMinValue(1).setMaxValue(1000).setRequired(true)))
+    .addSubcommand((subcommand) => subcommand.setName('scramble').setDescription('Start a word-scramble round.'))
+    .addSubcommand((subcommand) => subcommand.setName('solve').setDescription('Solve the active word scramble.')
+      .addStringOption((option) => option.setName('word').setDescription('Your answer').setMinLength(2).setMaxLength(40).setRequired(true)))
+    .addSubcommand((subcommand) => subcommand.setName('slots').setDescription('Spin Hatclanker’s just-for-fun slot machine.')),
   new SlashCommandBuilder()
     .setName('giveaway')
     .setDescription('Start a timed giveaway.')
@@ -272,7 +287,14 @@ export const commandDefinitions = [
   new SlashCommandBuilder()
     .setName('ai')
     .setDescription('Chat with Hatclanker through an optional local Ollama model.')
-    .addStringOption((option) => option.setName('prompt').setDescription('What do you want to ask?').setMaxLength(1500).setRequired(true)),
+    .addStringOption((option) => option.setName('prompt').setDescription('What do you want to ask?').setMaxLength(1500).setRequired(true))
+    .addBooleanOption((option) => option.setName('private').setDescription('Show the answer only to you').setRequired(false)),
+  new SlashCommandBuilder()
+    .setName('ai-status')
+    .setDescription('Check the Pi Ollama connection and installed model.'),
+  new SlashCommandBuilder()
+    .setName('ai-reset')
+    .setDescription('Clear your current Hatclanker AI conversation.'),
   new SlashCommandBuilder()
     .setName('translate')
     .setDescription('Translate text through a configured LibreTranslate service.')

@@ -185,7 +185,7 @@ export class AiMediaFeatures {
       const language = interaction.options.getString('language') || 'unknown';
       const result = await providerJson(endpoint, {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ model: process.env.OLLAMA_MODEL || 'llama3.2', stream: false, prompt: `Review this ${language} code. Be concise. Identify correctness, security, performance, and maintainability issues. Never execute it.\n\n${code}` })
+        body: JSON.stringify({ model: process.env.OLLAMA_MODEL || 'llama3.2:1b', stream: false, prompt: `Review this ${language} code. Be concise. Identify correctness, security, performance, and maintainability issues. Never execute it.\n\n${code}` })
       });
       const review = cleanText(String(result.response || 'No review returned.'));
       const file = review.length > 1900 ? new AttachmentBuilder(Buffer.from(review), { name: 'code-review.md' }) : null;

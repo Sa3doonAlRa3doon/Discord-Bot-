@@ -55,7 +55,7 @@ Each variable expects an HTTPS service controlled by the server owner or a trust
 
 Face swapping will not run unless the member explicitly confirms permission from every person shown. TTS uses named provider presets; do not configure voices that imitate a real person without permission. Voice transcription operates on a deliberately uploaded recording, avoiding silent voice-channel recording.
 
-Local `/ai`, `/code-review`, and `/story continue` use `OLLAMA_BASE_URL` and `OLLAMA_MODEL`.
+Local `/ai`, `/code-review`, and `/story continue` use `OLLAMA_BASE_URL` and `OLLAMA_MODEL`. `/ai-status` checks the connection and selected model, while `/ai-reset` clears the requesting member’s short in-memory conversation. Raspberry Pi users should follow `PI5-OLLAMA-SETUP.md`.
 
 ## Live flight provider
 

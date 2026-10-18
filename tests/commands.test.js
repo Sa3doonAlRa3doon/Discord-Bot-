@@ -11,7 +11,15 @@ describe('Discord command schema', () => {
 
   it('contains the requested feature groups', () => {
     const names = new Set(commandDefinitions.map((command) => command.name));
-    for (const name of ['moderate', 'security', 'panel', 'music', 'economy', 'ticket', 'event', 'giveaway', 'apply', 'tournament', 'ai', 'translate', 'backup', 'pomodoro', 'flashcard', 'habit', 'math', 'weather', 'pet', 'purge-filter', 'dm-broadcast', 'self-destruct']) {
+    for (const name of ['moderate', 'security', 'panel', 'music', 'economy', 'ticket', 'event', 'giveaway', 'apply', 'tournament', 'ai', 'ai-status', 'ai-reset', 'translate', 'backup', 'pomodoro', 'flashcard', 'habit', 'math', 'weather', 'pet', 'purge-filter', 'dm-broadcast', 'self-destruct']) {
+      expect(names.has(name)).toBe(true);
+    }
+  });
+
+  it('includes the expanded game modes', () => {
+    const game = commandDefinitions.find((command) => command.name === 'game');
+    const names = new Set(game.options.map((option) => option.name));
+    for (const name of ['hangman', 'guess', 'rps', 'trivia', 'number-start', 'number-guess', 'scramble', 'solve', 'slots']) {
       expect(names.has(name)).toBe(true);
     }
   });

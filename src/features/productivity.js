@@ -386,7 +386,7 @@ export class ProductivityFeatures {
       const endpoint = `${(process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/$/, '')}/api/generate`;
       const result = await jsonRequest(endpoint, {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ model: process.env.OLLAMA_MODEL || 'llama3.2', stream: false, prompt: `Continue this cooperative story in 2-4 clean, age-appropriate sentences. Do not repeat the prompt.\n\nStory: ${previous.text.slice(-4000)}\nNew sentence: ${sentence}` })
+        body: JSON.stringify({ model: process.env.OLLAMA_MODEL || 'llama3.2:1b', stream: false, prompt: `Continue this cooperative story in 2-4 clean, age-appropriate sentences. Do not repeat the prompt.\n\nStory: ${previous.text.slice(-4000)}\nNew sentence: ${sentence}` })
       });
       const continuation = cleanText(String(result.response || '').trim()).slice(0, 1500);
       const text = `${previous.text}${previous.text ? '\n' : ''}${sentence}\n${continuation}`.slice(-12_000);
