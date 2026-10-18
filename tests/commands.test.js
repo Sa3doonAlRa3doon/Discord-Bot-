@@ -11,9 +11,14 @@ describe('Discord command schema', () => {
 
   it('contains the requested feature groups', () => {
     const names = new Set(commandDefinitions.map((command) => command.name));
-    for (const name of ['moderate', 'security', 'panel', 'music', 'economy', 'ticket', 'event', 'giveaway', 'apply', 'tournament', 'ai', 'ai-status', 'ai-reset', 'google', 'translate', 'backup', 'pomodoro', 'flashcard', 'habit', 'math', 'weather', 'pet', 'purge-filter', 'dm-broadcast', 'self-destruct']) {
+    for (const name of ['moderate', 'security', 'panel', 'music', 'economy', 'ticket', 'event', 'giveaway', 'apply', 'tournament', 'ai', 'ai-status', 'ai-reset', 'translate', 'backup', 'pomodoro', 'flashcard', 'habit', 'math', 'weather', 'pet', 'purge-filter', 'dm-broadcast', 'self-destruct']) {
       expect(names.has(name)).toBe(true);
     }
+  });
+
+  it('does not expose private Google tools through Discord', () => {
+    const names = new Set(commandDefinitions.map((command) => command.name));
+    expect(names.has('google')).toBe(false);
   });
 
   it('includes the expanded game modes', () => {
