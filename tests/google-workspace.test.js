@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildMimeMessage,
+  extractGoogleDocText,
   googleWorkspaceSettings,
   isGoogleUserAllowed,
-  parseAllowedUserIds
+  parseAllowedUserIds,
+  parseGridValues
 } from '../src/lib/google-workspace.js';
 
 describe('Google Workspace security helpers', () => {
@@ -26,5 +28,24 @@ describe('Google Workspace security helpers', () => {
     expect(raw).not.toContain('\r\nInjected');
     expect(raw).toContain('To: friend@example.com');
     expect(raw).toContain('Content-Type: text/plain; charset=UTF-8');
+  });
+
+  it('parses compact Sheet rows and columns with safety limits', () => {
+    expect(parseGridValues('Name|Status;Jarvis|Ready')).toEqual([
+      ['Name', 'Status'],
+      ['Jarvis', 'Ready']
+    ]);
+    expect(() => parseGridValues('')).toThrow('cannot be empty');
+  });
+
+  it('extracts paragraph and table text from a Google Doc', () => {
+    expect(extractGoogleDocText({
+      body: {
+        content: [
+          { paragraph: { elements: [{ textRun: { content: 'Hello\n' } }] } },
+          { table: { tableRows: [{ tableCells: [{ content: [{ paragraph: { elements: [{ textRun: { content: 'Cell' } }] } }] }] }] } }
+        ]
+      }
+    })).toBe('Hello\nCell');
   });
 });

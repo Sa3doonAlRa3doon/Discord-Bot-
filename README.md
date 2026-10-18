@@ -2,9 +2,9 @@
 
 **Your personal Discord server co-pilot — loud style, zero confusion.**
 
-Hatclanker v4.2 is a full multi-purpose Discord bot with **80 slash commands**: moderation, security, onboarding, productivity, study rooms, private Google Workspace tools, AI/media adapters, live utilities, games, server automation, music, economy, and configurable integrations. Its core works without a paid AI API; optional AI chat and code review use local Ollama.
+Hatclanker v4.3 is a full multi-purpose Discord bot with **80 slash commands**: moderation, security, onboarding, productivity, study rooms, private Google Workspace tools, AI/media adapters, live utilities, games, server automation, music, economy, and configurable integrations. Its core works without a paid AI API; optional AI chat and code review use local Ollama.
 
-**Current release:** v4.2.0 · **Runtime:** Node.js 20+ · **AI:** local Ollama · **Production host:** Raspberry Pi 5 supported
+**Current release:** v4.3.0 · **Runtime:** Node.js 20+ · **AI:** local Ollama · **Production host:** Raspberry Pi 5 supported
 
 ![Hatclanker avatar](assets/hatclanker-avatar.png)
 
@@ -35,7 +35,7 @@ Hatclanker v4.2 is a full multi-purpose Discord bot with **80 slash commands**: 
 - Plays supported voice media with queue, pause, skip, loop, and shuffle controls
 - Generates memes and exports poll analytics as PNG and CSV
 - Connects local Ollama with short per-user conversations, status checks, clean output, Pi-friendly limits, LibreTranslate, RSS feeds, gaming APIs, and authenticated webhooks
-- Connects one private Google account for owner-only Gmail, Calendar, Drive, Docs, Sheets, Tasks, and Contacts commands; Gmail sending requires a draft plus explicit confirmation
+- Connects one private Google account for owner-only Gmail, Calendar, Meet links, Drive, Docs, Sheets, Slides, Forms, Tasks, and Contacts commands; Gmail sending requires a draft plus explicit confirmation
 - Runs shared Pomodoros, flashcard decks, habit streaks, math/calculus, dictionary, Wikipedia, and daily writing prompts
 - Adds consent-safe AI image, transcription, TTS, upscaling, background removal, face-swap, code-review, subtitle, and story adapters
 - Adds counting, a shared virtual pet, tarot/horoscope fun, starboard, character guessing, weather, facts, filtered purge, channel cloning, audit export, opt-in broadcasts, emoji cloning, and self-destructing messages

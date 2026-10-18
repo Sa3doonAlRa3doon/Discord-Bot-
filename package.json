@@ -1,6 +1,6 @@
 {
   "name": "fanbot-hatclanker",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "description": "A swag Discord server guide and personal assistant bot.",
   "type": "module",
   "main": "src/index.js",

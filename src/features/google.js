@@ -3,9 +3,11 @@ import { cleanText } from '../lib/clean-language.js';
 import {
   buildMimeMessage,
   createGoogleServices,
+  extractGoogleDocText,
   googleWorkspaceSettings,
   isGoogleUserAllowed,
-  loadGoogleAuth
+  loadGoogleAuth,
+  parseGridValues
 } from '../lib/google-workspace.js';
 
 const privatePayload = (payload) => ({ ...payload, flags: MessageFlags.Ephemeral });
@@ -38,6 +40,7 @@ function friendlyGoogleError(error) {
   const message = String(error?.message || '');
   if (status === 401 || message.includes('invalid_grant')) return 'Google authorization expired or was revoked. Generate a new token on Windows.';
   if (status === 403) return 'Google refused this action. Check that the API is enabled and the required OAuth scope was granted.';
+  if (status === 404) return 'That Google file was not found or is not available to Jarvis.';
   if (message.startsWith('Google token')) return message;
   return 'Google request failed. Check the Pi service log for details.';
 }
@@ -97,7 +100,7 @@ export class GoogleFeatures {
           services.people.people.connections.list({ resourceName: 'people/me', pageSize: 1, personFields: 'names' })
         ]);
         const account = discordSafe(gmail.data.emailAddress, 200);
-        await interaction.editReply({ content: `✅ Google connected as **${account}**\n✅ Gmail\n✅ Calendar\n✅ Drive\n✅ Tasks\n✅ Contacts`, allowedMentions: { parse: [] } });
+        await interaction.editReply({ content: `✅ Google connected as **${account}**\n✅ Gmail\n✅ Calendar + Meet links\n✅ Drive\n✅ Docs / Sheets / Slides / Forms\n✅ Tasks\n✅ Contacts`, allowedMentions: { parse: [] } });
         return true;
       }
 
@@ -163,11 +166,128 @@ export class GoogleFeatures {
         return true;
       }
 
-      if (sub === 'doc-create' || sub === 'sheet-create') {
+      if (sub === 'doc-create') {
         const title = cleanText(interaction.options.getString('title', true));
-        const mimeType = sub === 'doc-create' ? 'application/vnd.google-apps.document' : 'application/vnd.google-apps.spreadsheet';
-        const result = await services.drive.files.create({ requestBody: { name: title, mimeType }, fields: 'id,name,webViewLink' });
+        const content = cleanText(interaction.options.getString('content') || '');
+        const result = await services.drive.files.create({ requestBody: { name: title, mimeType: 'application/vnd.google-apps.document' }, fields: 'id,name,webViewLink' });
+        if (content) {
+          await services.docs.documents.batchUpdate({
+            documentId: result.data.id,
+            requestBody: { requests: [{ insertText: { location: { index: 1 }, text: `${content}\n` } }] }
+          });
+        } else {
+          await services.docs.documents.get({ documentId: result.data.id });
+        }
         await interaction.editReply(`✅ Created **${discordSafe(result.data.name, 180)}**${result.data.webViewLink ? `\n${result.data.webViewLink}` : `\nFile ID: \`${result.data.id}\``}`);
+        return true;
+      }
+
+      if (sub === 'doc-read') {
+        const documentId = interaction.options.getString('document_id', true).trim();
+        const result = await services.docs.documents.get({ documentId });
+        const text = extractGoogleDocText(result.data);
+        await interaction.editReply({ content: compactLines([text ? discordSafe(text, 1_850) : ''], 'The document is empty.'), allowedMentions: { parse: [] } });
+        return true;
+      }
+
+      if (sub === 'sheet-create') {
+        const title = cleanText(interaction.options.getString('title', true));
+        const result = await services.drive.files.create({ requestBody: { name: title, mimeType: 'application/vnd.google-apps.spreadsheet' }, fields: 'id,name,webViewLink' });
+        const headers = interaction.options.getString('headers');
+        if (headers) {
+          await services.sheets.spreadsheets.values.update({
+            spreadsheetId: result.data.id,
+            range: 'A1',
+            valueInputOption: 'USER_ENTERED',
+            requestBody: { values: parseGridValues(headers) }
+          });
+        } else {
+          await services.sheets.spreadsheets.get({ spreadsheetId: result.data.id, fields: 'spreadsheetId,properties.title' });
+        }
+        await interaction.editReply(`✅ Created **${discordSafe(result.data.name, 180)}**${result.data.webViewLink ? `\n${result.data.webViewLink}` : `\nFile ID: \`${result.data.id}\``}`);
+        return true;
+      }
+
+      if (sub === 'sheet-read') {
+        const spreadsheetId = interaction.options.getString('spreadsheet_id', true).trim();
+        const range = interaction.options.getString('range')?.trim() || 'A1:J20';
+        const result = await services.sheets.spreadsheets.values.get({ spreadsheetId, range });
+        const lines = (result.data.values || []).map((row, index) => `${index + 1}. ${row.map((cell) => discordSafe(cell, 120)).join(' | ')}`);
+        await interaction.editReply({ content: compactLines(lines, 'That range is empty.'), allowedMentions: { parse: [] } });
+        return true;
+      }
+
+      if (sub === 'sheet-write') {
+        const spreadsheetId = interaction.options.getString('spreadsheet_id', true).trim();
+        const range = interaction.options.getString('range', true).trim();
+        const values = parseGridValues(cleanText(interaction.options.getString('values', true)));
+        const result = await services.sheets.spreadsheets.values.update({
+          spreadsheetId,
+          range,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: { values }
+        });
+        await interaction.editReply(`✅ Updated ${result.data.updatedCells || 0} cell(s) in \`${discordSafe(result.data.updatedRange || range, 150)}\`.`);
+        return true;
+      }
+
+      if (sub === 'slide-create') {
+        const title = cleanText(interaction.options.getString('title', true));
+        const subtitle = cleanText(interaction.options.getString('subtitle') || 'Created by Hatclanker');
+        const created = await services.drive.files.create({ requestBody: { name: title, mimeType: 'application/vnd.google-apps.presentation' }, fields: 'id,name,webViewLink' });
+        const presentation = await services.slides.presentations.get({ presentationId: created.data.id });
+        const slideId = presentation.data.slides?.[0]?.objectId;
+        if (!slideId) throw new Error('Google created a presentation without a usable first slide.');
+        await services.slides.presentations.batchUpdate({
+          presentationId: created.data.id,
+          requestBody: {
+            requests: [
+              { createShape: { objectId: 'jarvis_title_box', shapeType: 'TEXT_BOX', elementProperties: { pageObjectId: slideId, size: { width: { magnitude: 600, unit: 'PT' }, height: { magnitude: 80, unit: 'PT' } }, transform: { scaleX: 1, scaleY: 1, translateX: 60, translateY: 120, unit: 'PT' } } } },
+              { insertText: { objectId: 'jarvis_title_box', text: title } },
+              { updateTextStyle: { objectId: 'jarvis_title_box', textRange: { type: 'ALL' }, style: { bold: true, fontSize: { magnitude: 32, unit: 'PT' } }, fields: 'bold,fontSize' } },
+              { createShape: { objectId: 'jarvis_subtitle_box', shapeType: 'TEXT_BOX', elementProperties: { pageObjectId: slideId, size: { width: { magnitude: 600, unit: 'PT' }, height: { magnitude: 60, unit: 'PT' } }, transform: { scaleX: 1, scaleY: 1, translateX: 60, translateY: 220, unit: 'PT' } } } },
+              { insertText: { objectId: 'jarvis_subtitle_box', text: subtitle } },
+              { updateTextStyle: { objectId: 'jarvis_subtitle_box', textRange: { type: 'ALL' }, style: { fontSize: { magnitude: 18, unit: 'PT' } }, fields: 'fontSize' } }
+            ]
+          }
+        });
+        await interaction.editReply(`✅ Created **${discordSafe(created.data.name, 180)}**\n${created.data.webViewLink || `https://docs.google.com/presentation/d/${created.data.id}/edit`}`);
+        return true;
+      }
+
+      if (sub === 'form-create') {
+        const title = cleanText(interaction.options.getString('title', true));
+        const question = cleanText(interaction.options.getString('question') || '');
+        const created = await services.forms.forms.create({ requestBody: { info: { title } } });
+        if (question) {
+          await services.forms.forms.batchUpdate({
+            formId: created.data.formId,
+            requestBody: {
+              requests: [{ createItem: { item: { title: question, questionItem: { question: { textQuestion: { paragraph: false } } } }, location: { index: 0 } } }]
+            }
+          });
+        }
+        await interaction.editReply(`✅ Created **${discordSafe(title, 180)}**\nEdit: https://docs.google.com/forms/d/${created.data.formId}/edit${created.data.responderUri ? `\nAnswer: ${created.data.responderUri}` : ''}`);
+        return true;
+      }
+
+      if (sub === 'meet-create') {
+        const start = new Date(interaction.options.getString('start', true));
+        if (Number.isNaN(start.getTime())) throw new Error('Use an ISO date/time such as `2026-10-20T18:00+04:00`.');
+        const minutes = interaction.options.getInteger('minutes') ?? 60;
+        const result = await services.calendar.events.insert({
+          calendarId: 'primary',
+          conferenceDataVersion: 1,
+          requestBody: {
+            summary: cleanText(interaction.options.getString('title', true)),
+            description: cleanText(interaction.options.getString('details') || ''),
+            start: { dateTime: start.toISOString() },
+            end: { dateTime: new Date(start.getTime() + minutes * 60_000).toISOString() },
+            conferenceData: { createRequest: { requestId: `hatclanker-${interaction.id}-${Date.now()}`, conferenceSolutionKey: { type: 'hangoutsMeet' } } }
+          }
+        });
+        const meetLink = result.data.hangoutLink || result.data.conferenceData?.entryPoints?.find((entry) => entry.entryPointType === 'video')?.uri;
+        await interaction.editReply(`✅ Meeting created${meetLink ? `\nMeet: ${meetLink}` : ''}${result.data.htmlLink ? `\nCalendar: ${result.data.htmlLink}` : ''}`);
         return true;
       }
 
@@ -202,7 +322,7 @@ export class GoogleFeatures {
     } catch (error) {
       console.error(`Google command ${sub} failed:`, error?.response?.status || error?.code || error?.message);
       const inputMessage = String(error?.message || '');
-      const userMessage = inputMessage.startsWith('Use an ISO') || inputMessage.startsWith('Use `YYYY') || inputMessage.startsWith('Enter one valid') || inputMessage.startsWith('Email subject')
+      const userMessage = /^(Use |Enter |Email subject|Sheet values)/.test(inputMessage)
         ? inputMessage
         : friendlyGoogleError(error);
       await interaction.editReply(`❌ ${userMessage}`);
